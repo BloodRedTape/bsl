@@ -1,5 +1,6 @@
 #include "bsl/file.hpp"
 #include <fstream>
+#include <filesystem>
 
 std::string ReadEntireFile(const std::string &filepath){
     std::ifstream t(filepath);
@@ -17,6 +18,8 @@ std::string ReadEntireFile(const std::string &filepath){
 }
 
 void WriteEntireFile(const std::string &filepath, const std::string &content){
+    std::filesystem::create_directories(std::filesystem::path(filepath).parent_path());
+
     std::ofstream stream(filepath);
     if(!stream.is_open())
         return (void)printf("Can't write '%s'\n", filepath.c_str());
