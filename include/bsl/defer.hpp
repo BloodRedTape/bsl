@@ -3,8 +3,12 @@
 #include <utility>
 #include <functional>
 
+#ifndef CAT
+#ifndef CAT_IMPL
 #define CAT_IMPL(a, b) a##b
 #define CAT(a, b) CAT_IMPL(a, b)
+#endif
+#endif
 
 struct PredicateInjector {
 	std::function<void(void)> Predicate;
