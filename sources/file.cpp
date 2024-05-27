@@ -26,3 +26,23 @@ void WriteEntireFile(const std::string &filepath, const std::string &content){
     stream.write(content.data(), content.size());
 }
 
+std::string MakeUniqueFilename(const std::string& filename) {
+    namespace fs = std::filesystem;
+    fs::path filePath(filename);
+    
+    if (!fs::exists(filePath))
+        return filename;
+    
+    std::string baseName = filePath.stem().string();
+    std::string extension = filePath.extension().string();
+    
+    int count = 1;
+    while (fs::exists(filePath)) {
+        filePath = filePath.parent_path() / (baseName + " (" + std::to_string(count) + ")" + extension);
+        count++;
+    }
+    
+    return filePath.string();
+}
+
+
