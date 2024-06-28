@@ -18,7 +18,10 @@ std::string ReadEntireFile(const std::string &filepath){
 }
 
 void WriteEntireFile(const std::string &filepath, const std::string &content){
-    std::filesystem::create_directories(std::filesystem::path(filepath).parent_path());
+    auto path = std::filesystem::path(filepath);
+
+    if(path.has_parent_path())
+        std::filesystem::create_directories(path.parent_path());
 
     std::ofstream stream(filepath);
     if(!stream.is_open())
