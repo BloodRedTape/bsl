@@ -32,18 +32,33 @@ inline std::ostream& operator<<(std::ostream& stream, Verbosity verbosity) {
 	return stream;
 }
 
-template<typename...ArgsType>
-void Log(Verbosity verbosity, const char* fmt, ArgsType...args) {
+#ifndef BSL_WITH_EXTERNAL_LOG_FUNCTION
+	#define BSL_WITH_EXTERNAL_LOG_FUNCTION 0
+#endif
+
+#if BSL_WITH_EXTERNAL_LOG_FUNCTION
+extern void LogFunctionExternal(const std::string &category, Verbosity verbosity, const std::string &message);
+#else
+void LogFunction(const std::string &category, Verbosity verbosity, const std::string &message) {
 	auto &stream = (verbosity == Fatal || verbosity == Error) ? std::cerr : std::cout;
 
-	StreamFormat(stream, "[%]: %\n", verbosity, Format(fmt, args...));
+	StreamFormat(stream, "[%][%]: %\n", category, verbosity, message);
+}
+#endif
+
+template<typename...ArgsType>
+void Log(const std::string &category, Verbosity verbosity, const char* fmt, ArgsType...args) {
+#if BSL_WITH_EXTERNAL_LOG_FUNCTION
+	LogFunctionExternal(category, verbosity, Format(fmt, args...));
+#else
+	LogFunction(category, verbosity, Format(fmt, args...));
+#endif
 }
 
 #define DEFINE_LOG_CATEGORY(name) \
 template<typename...ArgsType> \
 static void Log##name(Verbosity verbosity, const char* fmt, ArgsType...args) { \
-	auto &stream = (verbosity == Fatal || verbosity == Error) ? std::cerr : std::cout; \
-	StreamFormat(stream, "[%][%]: %\n", #name, verbosity, Format(fmt, args...)); \
+	Log(#name, verbosity, fmt, args...); \
 } \
 template<typename...ArgsType> \
 static void Log##name##If(bool condition, Verbosity verbosity, const char *fmt, ArgsType...args) {\
