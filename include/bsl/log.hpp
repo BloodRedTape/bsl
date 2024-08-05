@@ -2,7 +2,13 @@
 
 #include "bsl/format.hpp"
 
-enum Verbosity {
+#if BSL_WITH_SCOPED_VERBOSITY
+#define BSL_VERBOSITY_MODIFIER class
+#else
+#define BSL_VERBOSITY_MODIFIER
+#endif
+
+enum BSL_VERBOSITY_MODIFIER Verbosity {
 	Display,
 	Info,
 	Warning,
