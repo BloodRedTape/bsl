@@ -1,12 +1,36 @@
 #pragma once
 
-#include "bsl/format.hpp"
-
 #if BSL_WITH_SCOPED_VERBOSITY
 #define BSL_VERBOSITY_MODIFIER class
 #else
 #define BSL_VERBOSITY_MODIFIER
 #endif
+
+#ifndef BSL_WITH_EXTERNAL_LOG_FUNCTION
+	#define BSL_WITH_EXTERNAL_LOG_FUNCTION 0
+#endif
+
+#ifndef BSL_WITH_TIME_LOG
+	#define BSL_WITH_TIME_LOG 0
+#endif
+
+#if BSL_WITH_TIME_LOG
+#include <chrono>
+#endif
+
+#include "bsl/format.hpp"
+
+namespace Details{
+#if BSL_WITH_TIME_LOG
+	static auto CurrentTime() {
+		auto now = std::chrono::system_clock::now();
+		std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
+		std::tm localTime = *std::localtime(&nowTime);
+    
+		return Format("%:%:%", localTime.tm_hour + 1, localTime.tm_min, localTime.tm_sec);
+	}
+#endif
+}
 
 enum BSL_VERBOSITY_MODIFIER Verbosity {
 	Display,
@@ -38,9 +62,7 @@ inline std::ostream& operator<<(std::ostream& stream, Verbosity verbosity) {
 	return stream;
 }
 
-#ifndef BSL_WITH_EXTERNAL_LOG_FUNCTION
-	#define BSL_WITH_EXTERNAL_LOG_FUNCTION 0
-#endif
+
 
 #if BSL_WITH_EXTERNAL_LOG_FUNCTION
 extern void LogFunctionExternal(const std::string &category, Verbosity verbosity, const std::string &message);
@@ -48,7 +70,14 @@ extern void LogFunctionExternal(const std::string &category, Verbosity verbosity
 void LogFunction(const std::string &category, Verbosity verbosity, const std::string &message) {
 	auto &stream = (verbosity == Fatal || verbosity == Error) ? std::cerr : std::cout;
 
-	StreamFormat(stream, "[%][%]: %\n", category, verbosity, message);
+	auto time_string = 
+#if BSL_WITH_TIME_LOG 
+	Format("[%]", Details::CurrentTime());
+#else
+	"";
+#endif
+
+	StreamFormat(stream, "%[%][%]: %\n", time_string, category, verbosity, message);
 }
 #endif
 
