@@ -67,7 +67,7 @@ inline std::ostream& operator<<(std::ostream& stream, Verbosity verbosity) {
 #if BSL_WITH_EXTERNAL_LOG_FUNCTION
 extern void LogFunctionExternal(const std::string &category, Verbosity verbosity, const std::string &message);
 #else
-void LogFunction(const std::string &category, Verbosity verbosity, const std::string &message) {
+static void LogFunction(const std::string &category, Verbosity verbosity, const std::string &message) {
 	auto &stream = (verbosity == Fatal || verbosity == Error) ? std::cerr : std::cout;
 
 	auto time_string = 
