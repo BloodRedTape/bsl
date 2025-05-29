@@ -2,10 +2,11 @@
 
 #include <bsl/macro.hpp>
 #include <string_view>
+#include <optional>
 
 #define BSL_ENUM_MAKE_MEMBER_NAME(name) #name ,
 #define BSL_ENUM_GENERATE_MEMBER_DECLARATION(name) static const ThisEnumType name;
-#define BSL_ENUM_GENERATE_MEMBER_DEFINITION(name, index, EnumTypeName) inline const EnumTypeName BSL_CONCATENATE(EnumTypeName, ::name) = index;
+#define BSL_ENUM_GENERATE_MEMBER_DEFINITION(name, index, EnumTypeName) inline const EnumTypeName BSL_EXPAND(EnumTypeName) :: BSL_EXPAND(name) = index;
 
 #define BSL_ENUM(EnumTypeName, ...) \
 class EnumTypeName { \
@@ -48,6 +49,15 @@ public: \
 	bool operator!=(const EnumTypeName &other)const{ \
 		return m_Value != other.m_Value; \
 	} \
+\
+	static std::optional<EnumTypeName> FromString(std::string_view string) {\
+		for(std::int32_t i = 0; i<std::size(Names()); i++){ \
+			if(Names()[i] == string) \
+				return EnumTypeName(i); \
+		} \
+		return std::nullopt; \
+\
+	}\
 \
 }; \
 BSL_FOR_EACH_INDEXED_PARAM(BSL_ENUM_GENERATE_MEMBER_DEFINITION, EnumTypeName, __VA_ARGS__)
