@@ -68,7 +68,7 @@ BSL_FOR_EACH_INDEXED_PARAM(BSL_ENUM_GENERATE_MEMBER_DEFINITION, EnumTypeName, __
 \
 namespace std{ \
 template<> \
-struct std::hash<EnumTypeName> \
+struct hash<EnumTypeName> \
 { \
     std::size_t operator()(const EnumTypeName& value) const noexcept \
     { \
