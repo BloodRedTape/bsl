@@ -50,6 +50,10 @@ public: \
 		return m_Value != other.m_Value; \
 	} \
 \
+	bool operator<(const EnumTypeName &other)const{ \
+		return m_Value < other.m_Value; \
+	} \
+\
 	static std::optional<EnumTypeName> FromString(std::string_view string) {\
 		for(std::int32_t i = 0; i<std::size(Names()); i++){ \
 			if(Names()[i] == string) \
@@ -60,6 +64,23 @@ public: \
 	}\
 \
 }; \
-BSL_FOR_EACH_INDEXED_PARAM(BSL_ENUM_GENERATE_MEMBER_DEFINITION, EnumTypeName, __VA_ARGS__)
+BSL_FOR_EACH_INDEXED_PARAM(BSL_ENUM_GENERATE_MEMBER_DEFINITION, EnumTypeName, __VA_ARGS__) \
+\
+namespace std{ \
+template<> \
+struct std::hash<EnumTypeName> \
+{ \
+    std::size_t operator()(const EnumTypeName& value) const noexcept \
+    { \
+        return std::hash<std::int32_t>{}(value.AsInt()); \
+    } \
+}; \
+ \
+} \
+\
+inline std::ostream &operator<<(std::ostream &stream, const EnumTypeName &value){ \
+	stream << value.Name(); \
+	return stream; \
+}
 
 
