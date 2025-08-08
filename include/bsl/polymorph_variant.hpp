@@ -9,11 +9,11 @@ class PolymorphVariant {
 	VariantType m_Value;
 public:
 	template<typename SubType>
-	PolymorphVariant(SubType&& value):
-		m_Value(std::move(value))
-	{}
+	PolymorphVariant(SubType&& value)noexcept{
+		m_Value = std::move(value);
+	}
 
-	PolymorphVariant(VariantType&& value):
+	PolymorphVariant(VariantType&& value)noexcept:
 		m_Value(std::move(value))
 	{}
 
@@ -31,12 +31,12 @@ public:
 
 	
 	template<typename...ArgsType>
-	PolymorphVariant &operator=(ArgsType&&...args){
+	PolymorphVariant &operator=(ArgsType&&...args)noexcept{
 		m_Value = {std::forward<ArgsType>(args)...};
 		return *this;
 	}
 
-	PolymorphVariant &operator=(VariantType&& value) {
+	PolymorphVariant &operator=(VariantType&& value)noexcept{
 		m_Value = std::move(value);
 		return *this;
 	}
@@ -68,6 +68,10 @@ public:
 		}, m_Value);
 
 		return ptr;
+	}
+
+	operator VariantType()const {
+		return m_Value;
 	}
 
 	BaseType* operator->() { return Ptr(); }
