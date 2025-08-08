@@ -8,9 +8,9 @@ class PolymorphVariant {
 
 	VariantType m_Value;
 public:
-	template<typename...ArgsType>
-	PolymorphVariant(ArgsType&&...args):
-		m_Value(std::forward<ArgsType>(args)...)
+	template<typename SubType>
+	PolymorphVariant(SubType&& value):
+		m_Value(std::move(value))
 	{}
 
 	PolymorphVariant(VariantType&& value):
@@ -25,11 +25,17 @@ public:
 		PolymorphVariant(other.m_Value)
 	{}
 
-	PolymorphVariant(PolymorphVariant &&other):
+	PolymorphVariant(PolymorphVariant &&other)noexcept:
 		PolymorphVariant(std::move(other.m_Value))
 	{}
 
 	
+	template<typename...ArgsType>
+	PolymorphVariant &operator=(ArgsType&&...args){
+		m_Value = {std::forward<ArgsType>(args)...};
+		return *this;
+	}
+
 	PolymorphVariant &operator=(VariantType&& value) {
 		m_Value = std::move(value);
 		return *this;
@@ -45,7 +51,7 @@ public:
 		return *this;
 	}
 
-	PolymorphVariant& operator=(PolymorphVariant&& other) {
+	PolymorphVariant& operator=(PolymorphVariant&& other) noexcept{
 		m_Value = other.value;
 		return *this;
 	}
@@ -71,4 +77,19 @@ public:
 	BaseType& operator*() { return *Ptr(); }
 
 	const BaseType& operator*()const{ return *Ptr(); }
+
+	template<typename SubType>
+	const SubType* Cast()const{
+		return std::get_if<SubType>(&m_Value);
+	}
+
+	template<typename SubType>
+	SubType* Cast(){
+		return const_cast<BaseType*>(((const PolymorphVariant *)this)->Cast<SubType>());
+	}
+
+	template<typename SubType>
+	bool Is()const {
+		return Cast<SubType>();
+	}
 };
