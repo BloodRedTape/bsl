@@ -36,8 +36,8 @@ void File::WriteEntire(const std::filesystem::path &filepath, std::string_view b
     stream.write(buffer.data(), buffer.size());
 }
 
-void File::WriteEntire(const std::string& filepath, const std::string& buffer) {
-    File::WriteEntire(std::filesystem::path(filepath), std::string_view(buffer));
+void File::WriteEntire(const std::string& filepath, std::string_view buffer) {
+    File::WriteEntire(std::filesystem::path(filepath), buffer);
 }
 
 void File::WriteEntire(std::string_view filepath, std::string_view buffer) {

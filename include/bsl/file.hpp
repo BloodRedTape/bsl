@@ -13,7 +13,7 @@ std::string ReadEntire(std::string_view filepath);
 
 void WriteEntire(const std::filesystem::path &filepath, std::string_view buffer);
 
-void WriteEntire(const std::string &filepath, const std::string &buffer);
+void WriteEntire(const std::string &filepath, std::string_view buffer);
 
 void WriteEntire(std::string_view filepath, std::string_view buffer);
 
