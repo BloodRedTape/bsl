@@ -11,12 +11,14 @@
 #define BSL_ENUM(EnumTypeName, ...) \
 class EnumTypeName { \
 private: \
-    std::int32_t m_Value; \
+    std::int32_t m_Value = 0; \
 private: \
     constexpr EnumTypeName(std::int32_t value): \
         m_Value(value) \
     {} \
 	using ThisEnumType = EnumTypeName; \
+public: \
+	EnumTypeName() = default; \
 public: \
 	BSL_FOR_EACH(BSL_ENUM_GENERATE_MEMBER_DECLARATION, __VA_ARGS__) \
 \
