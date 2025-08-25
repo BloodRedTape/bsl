@@ -7,8 +7,20 @@ class PolymorphVariant {
 	using VariantType = std::variant<SubTypes...>;
 
 	VariantType m_Value;
+
+    template<typename T>
+    static constexpr bool IsValidSubtype = (std::is_same_v<std::decay_t<T>, SubTypes> || ...);
+
+	template<typename First, typename... Rest>
+	static constexpr auto GetInitializer() -> First {
+		return First{};
+	}
 public:
-	template<typename SubType>
+	PolymorphVariant():
+		m_Value(GetInitializer<SubTypes...>())
+	{}
+
+	template<typename SubType, typename = std::enable_if_t<IsValidSubtype<SubType>>>
 	PolymorphVariant(SubType&& value)noexcept{
 		m_Value = std::move(value);
 	}
@@ -30,9 +42,9 @@ public:
 	{}
 
 	
-	template<typename...ArgsType>
-	PolymorphVariant &operator=(ArgsType&&...args)noexcept{
-		m_Value = {std::forward<ArgsType>(args)...};
+	template<typename SubType, typename = std::enable_if_t<IsValidSubtype<SubType>>>
+	PolymorphVariant &operator=(SubType &&value)noexcept{
+		m_Value = std::move(value);
 		return *this;
 	}
 
