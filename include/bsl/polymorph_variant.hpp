@@ -47,12 +47,12 @@ public:
 	}
 	
 	PolymorphVariant &operator=(const PolymorphVariant &other){
-		m_Value = other.value;
+		m_Value = other.m_Value;
 		return *this;
 	}
 
 	PolymorphVariant& operator=(PolymorphVariant&& other) noexcept{
-		m_Value = other.value;
+		m_Value = std::move(other.m_Value);
 		return *this;
 	}
 
