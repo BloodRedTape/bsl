@@ -16,6 +16,8 @@ class PolymorphVariant {
 		return First{};
 	}
 public:
+	using SubtypeId = std::size_t;
+public:
 	PolymorphVariant():
 		m_Value(GetInitializer<SubTypes...>())
 	{}
@@ -82,6 +84,22 @@ public:
 		return ptr;
 	}
 
+	SubtypeId Id()const {
+		return m_Value.index();
+	}
+	
+	template<typename SubType, typename = std::enable_if_t<IsValidSubtype<SubType>>>
+	static SubtypeId Id() {
+		size_t index = 0;
+		auto test = [&](bool b){
+			if (!b) ++index;
+			return b;
+		};
+		(test(std::is_same_v<SubType, SubTypes>) || ...);
+
+		return index;
+	}
+
 	operator VariantType()const {
 		return m_Value;
 	}
@@ -107,5 +125,9 @@ public:
 	template<typename SubType>
 	bool Is()const {
 		return Cast<SubType>();
+	}
+
+	bool Is(SubtypeId id)const {
+		return Id() == id;
 	}
 };
