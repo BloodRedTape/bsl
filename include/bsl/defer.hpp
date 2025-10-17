@@ -36,4 +36,4 @@ public:
 	
 };
 
-#define defer DeferType CAT(__defer_, __LINE__) = PredicateInjector() << [&]
+#define BSL_DEFER DeferType CAT(__defer_, __LINE__) = PredicateInjector() << [&]
