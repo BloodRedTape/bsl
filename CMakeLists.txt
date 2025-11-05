@@ -13,6 +13,7 @@ if(BSL_WITH_STACKTRACE)
 
 	if(UNIX)
 		set_property(TARGET bsl PROPERTY ENABLE_EXPORTS ON)
+		target_link_libraries(bsl PUBLIC dl)
 	endif()
 else()
 	target_compile_definitions(bsl PUBLIC BSL_WITH_STACKTRACE=0)
