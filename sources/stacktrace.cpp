@@ -57,16 +57,16 @@ std::ostream& operator<<(std::ostream& stream, const Stacktrace& trace){
     }
     free(symbol);
 #elif defined(__unix__)
-    char **symbols = backtrace_symbols(value.m_FramePointers, value.m_CapturedFrames);
+    char **symbols = backtrace_symbols(trace.m_FramePointers, trace.m_CapturedFrames);
     if (!symbols) {
         stream << "<Stacktrace symbols routine failed>";
         return stream;
     }
     char buf[2048] = {0};
-    for(int i = 1; i < value.m_CapturedFrames; i++) {
+    for(int i = 1; i < trace.m_CapturedFrames; i++) {
 
         Dl_info info;
-        if(dladdr(value.m_FramePointers[i], &info) && info.dli_sname){
+        if(dladdr(trace.m_FramePointers[i], &info) && info.dli_sname){
             char *demangled = NULL;
 
             int status = -1;
@@ -74,15 +74,15 @@ std::ostream& operator<<(std::ostream& stream, const Stacktrace& trace){
                 demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
 
             const char *proc_name = (status == 0 ? demangled : (info.dli_sname == 0 ? symbols[i] : info.dli_sname));
-            size_t offset = (u8 *)value.m_FramePointers[i] - (u8 *)info.dli_saddr;
+            std::size_t offset = (std::uint8_t *)trace.m_FramePointers[i] - (std::uint8_t *)info.dli_saddr;
             const char *filename = info.dli_fname;
-            void *frame_address = value.m_FramePointers[i];
+            void *frame_address = trace.m_FramePointers[i];
 
-            snprintf(buf, sizeof(buf), "%-3d 0x%016lx %s :: %s + %zd", i, (size_t)frame_address, filename, proc_name, offset);
+            snprintf(buf, sizeof(buf), "%-3d 0x%016lx %s :: %s + %zd", i, (std::size_t)frame_address, filename, proc_name, offset);
 
             free(demangled);
         }else{
-            snprintf(buf, sizeof(buf), "%-3d 0x%016lx %s", i, (size_t)value.m_FramePointers[i], symbols[i]);
+            snprintf(buf, sizeof(buf), "%-3d 0x%016lx %s", i, (std::size_t)trace.m_FramePointers[i], symbols[i]);
         }
 
         stream << buf << '\n';
