@@ -26,3 +26,18 @@ if(BSL_WITH_SCOPED_VERBOSITY)
 endif()
 target_include_directories(bsl PUBLIC "./include")
 target_compile_features(bsl PRIVATE cxx_std_17)
+
+
+target_precompile_headers(bsl PUBLIC 
+	"./include/bsl/defer.hpp"
+	"./include/bsl/enum.hpp"
+	"./include/bsl/file.hpp"
+	"./include/bsl/format.hpp"
+	"./include/bsl/log.hpp"
+	"./include/bsl/parse.hpp"
+	"./include/bsl/polymorph_variant.hpp"
+	"./include/bsl/serialization.hpp"
+	"./include/bsl/serialization_std.hpp"
+	"./include/bsl/stdlib.hpp"
+)
+

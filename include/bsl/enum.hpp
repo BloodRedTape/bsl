@@ -11,12 +11,14 @@
 #define BSL_ENUM(EnumTypeName, ...) \
 class EnumTypeName { \
 private: \
-    std::int32_t m_Value; \
+    std::int32_t m_Value = 0; \
 private: \
     constexpr EnumTypeName(std::int32_t value): \
         m_Value(value) \
     {} \
 	using ThisEnumType = EnumTypeName; \
+public: \
+	EnumTypeName() = default; \
 public: \
 	BSL_FOR_EACH(BSL_ENUM_GENERATE_MEMBER_DECLARATION, __VA_ARGS__) \
 \
@@ -50,6 +52,10 @@ public: \
 		return m_Value != other.m_Value; \
 	} \
 \
+	bool operator<(const EnumTypeName &other)const{ \
+		return m_Value < other.m_Value; \
+	} \
+\
 	static std::optional<EnumTypeName> FromString(std::string_view string) {\
 		for(std::int32_t i = 0; i<std::size(Names()); i++){ \
 			if(Names()[i] == string) \
@@ -60,6 +66,23 @@ public: \
 	}\
 \
 }; \
-BSL_FOR_EACH_INDEXED_PARAM(BSL_ENUM_GENERATE_MEMBER_DEFINITION, EnumTypeName, __VA_ARGS__)
+BSL_FOR_EACH_INDEXED_PARAM(BSL_ENUM_GENERATE_MEMBER_DEFINITION, EnumTypeName, __VA_ARGS__) \
+\
+namespace std{ \
+template<> \
+struct hash<EnumTypeName> \
+{ \
+    std::size_t operator()(const EnumTypeName& value) const noexcept \
+    { \
+        return std::hash<std::int32_t>{}(value.AsInt()); \
+    } \
+}; \
+ \
+} \
+\
+inline std::ostream &operator<<(std::ostream &stream, const EnumTypeName &value){ \
+	stream << value.Name(); \
+	return stream; \
+}
 
 

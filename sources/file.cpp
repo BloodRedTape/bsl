@@ -2,10 +2,9 @@
 #include <fstream>
 #include <filesystem>
 
-std::string ReadEntireFile(const std::string &filepath){
-    std::ifstream t(filepath);
+std::string File::ReadEntire(const std::filesystem::path &filepath){
+    std::ifstream t(filepath, std::ios::binary | std::ios::in);
     if(!t.is_open()){
-        printf("Can't read '%s'\n", filepath.c_str());
         return {};
     }
 
@@ -15,21 +14,37 @@ std::string ReadEntireFile(const std::string &filepath){
     t.seekg(0);
     t.read(&buffer[0], size); 
     return buffer;
+
 }
 
-void WriteEntireFile(const std::string &filepath, const std::string &content){
-    auto path = std::filesystem::path(filepath);
+std::string File::ReadEntire(const std::string& filepath) {
+    return File::ReadEntire(std::filesystem::path(filepath));
+}
 
-    if(path.has_parent_path())
-        std::filesystem::create_directories(path.parent_path());
+std::string File::ReadEntire(std::string_view filepath) {
+    return File::ReadEntire(std::filesystem::path(filepath));
+}
 
-    std::ofstream stream(filepath);
+void File::WriteEntire(const std::filesystem::path &filepath, std::string_view buffer) {
+    if(filepath.has_parent_path())
+        std::filesystem::create_directories(filepath.parent_path());
+
+    std::ofstream stream(filepath, std::ios::binary | std::ios::out);
     if(!stream.is_open())
-        return (void)printf("Can't write '%s'\n", filepath.c_str());
-    stream.write(content.data(), content.size());
+        return;
+
+    stream.write(buffer.data(), buffer.size());
 }
 
-std::string MakeUniqueFilename(const std::string& filename) {
+void File::WriteEntire(const std::string& filepath, std::string_view buffer) {
+    File::WriteEntire(std::filesystem::path(filepath), buffer);
+}
+
+void File::WriteEntire(std::string_view filepath, std::string_view buffer) {
+    File::WriteEntire(std::filesystem::path(filepath), buffer);
+}
+
+std::string File::MakeUniqueFilename(const std::string& filename) {
     namespace fs = std::filesystem;
     fs::path filePath(filename);
     
