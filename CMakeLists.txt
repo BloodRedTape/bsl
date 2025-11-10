@@ -2,6 +2,7 @@ project(bsl)
 
 add_library(bsl 
 	"./sources/file.cpp"
+	"./sources/stdlib.cpp"
 	"./sources/stacktrace.cpp"
 )
 

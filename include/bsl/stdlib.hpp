@@ -14,3 +14,13 @@ std::optional<RetType> ErrnoSafeCall(RetType (*function)(ArgsType...), ArgsType.
 
 	return std::make_optional(result);
 }
+
+
+
+namespace Runtime{
+
+	using FailureHandlerType = void (*)();
+
+	void SetFailureHandler(FailureHandlerType handler);
+
+}//namespace ::Runtime
