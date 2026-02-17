@@ -33,6 +33,7 @@ namespace Details{
 }
 
 enum BSL_VERBOSITY_MODIFIER Verbosity {
+	Verbose,
 	Display,
 	Info,
 	Warning,
@@ -43,6 +44,9 @@ enum BSL_VERBOSITY_MODIFIER Verbosity {
 inline std::ostream& operator<<(std::ostream& stream, Verbosity verbosity) {
 	switch (verbosity)
 	{
+	case Verbosity::Verbose:
+		stream << "Verbose";
+		break;
 	case Verbosity::Display:
 		stream << "Display";
 		break;
