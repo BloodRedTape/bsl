@@ -70,6 +70,14 @@ public:
 		return *this;
 	}
 
+    friend bool operator==(const PolymorphVariant& left, const PolymorphVariant& right) {
+        return left.m_Value == right.m_Value;
+    }
+
+    friend bool operator!=(const PolymorphVariant& left, const PolymorphVariant& right) {
+        return left.m_Value != right.m_Value;
+    }
+
 	BaseType* Ptr() {
 		return const_cast<BaseType*>(((const PolymorphVariant *)this)->Ptr());
 	}
