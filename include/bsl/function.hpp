@@ -62,10 +62,15 @@ class DynamicCallableFunction : public CallableFunction<ReturnType, ArgsType...>
 	using CallableFunctionType = CallableFunction<ReturnType, ArgsType...>;
 private:
 	std::unique_ptr<CallableFunctionType> m_Callable;
-public:
+
 	DynamicCallableFunction(std::unique_ptr<CallableFunctionType> callable):
 		m_Callable(std::move(callable))
 	{}
+public:
+	template<typename ConcreteCallable, typename ...ConstructArgs>
+	static DynamicCallableFunction Make(ConstructArgs&&...args) {
+		return DynamicCallableFunction(std::make_unique<ConcreteCallable>(std::forward<ConstructArgs>(args)...));
+	}
 
 	DynamicCallableFunction(const DynamicCallableFunction&) = delete;
 	DynamicCallableFunction& operator=(const DynamicCallableFunction&) = delete;
@@ -278,19 +283,19 @@ public:
 
 	template<typename ObjectType>
 	Function& Bind(ObjectType *object, ReturnType (ObjectType::*method)(ArgsType...)) {
-		m_Callable = DynamicFunctionType(std::make_unique<CallableRawMemberFunction<ObjectType, ReturnType, ArgsType...>>(object, method));
+		m_Callable = DynamicFunctionType::Make<CallableRawMemberFunction<ObjectType, ReturnType, ArgsType...>>(object, method);
 		return *this;
 	}
 
 	template<typename ObjectType>
 	Function& Bind(std::weak_ptr<ObjectType> object, ReturnType (ObjectType::*method)(ArgsType...)) {
-		m_Callable = DynamicFunctionType(std::make_unique<CallableWeakMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method));
+		m_Callable = DynamicFunctionType::Make<CallableWeakMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method);
 		return *this;
 	}
 
 	template<typename ObjectType>
 	Function& Bind(std::shared_ptr<ObjectType> object, ReturnType (ObjectType::*method)(ArgsType...)) {
-		m_Callable = DynamicFunctionType(std::make_unique<CallableSharedMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method));
+		m_Callable = DynamicFunctionType::Make<CallableSharedMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method);
 		return *this;
 	}
 
