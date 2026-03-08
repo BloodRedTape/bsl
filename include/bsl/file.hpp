@@ -2,20 +2,13 @@
 
 #include <string>
 #include <filesystem>
+#include <optional>
 
 namespace File{
 
-std::string ReadEntire(const std::filesystem::path &filepath);
+std::optional<std::string> ReadEntire(const std::filesystem::path &filepath);
 
-std::string ReadEntire(const std::string &filepath);
-
-std::string ReadEntire(std::string_view filepath);
-
-void WriteEntire(const std::filesystem::path &filepath, std::string_view buffer);
-
-void WriteEntire(const std::string &filepath, std::string_view buffer);
-
-void WriteEntire(std::string_view filepath, std::string_view buffer);
+bool WriteEntire(const std::filesystem::path &filepath, std::string_view buffer, std::optional<std::filesystem::perms> permissions = std::nullopt);
 
 std::string MakeUniqueFilename(const std::string& filename);
 

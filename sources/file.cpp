@@ -2,10 +2,14 @@
 #include <fstream>
 #include <filesystem>
 
-std::string File::ReadEntire(const std::filesystem::path &filepath){
+std::optional<std::string> File::ReadEntire(const std::filesystem::path &filepath){
+    if(!std::filesystem::is_regular_file(filepath)){
+        return std::nullopt;
+    }
+
     std::ifstream t(filepath, std::ios::binary | std::ios::in);
     if(!t.is_open()){
-        return {};
+        return std::nullopt;
     }
 
     t.seekg(0, std::ios::end);
@@ -17,31 +21,30 @@ std::string File::ReadEntire(const std::filesystem::path &filepath){
 
 }
 
-std::string File::ReadEntire(const std::string& filepath) {
-    return File::ReadEntire(std::filesystem::path(filepath));
-}
-
-std::string File::ReadEntire(std::string_view filepath) {
-    return File::ReadEntire(std::filesystem::path(filepath));
-}
-
-void File::WriteEntire(const std::filesystem::path &filepath, std::string_view buffer) {
-    if(filepath.has_parent_path())
+bool File::WriteEntire(const std::filesystem::path &filepath, std::string_view buffer, std::optional<std::filesystem::perms> permissions) {
+    if(filepath.has_parent_path()){
         std::filesystem::create_directories(filepath.parent_path());
+    }
 
     std::ofstream stream(filepath, std::ios::binary | std::ios::out);
-    if(!stream.is_open())
-        return;
+    if(!stream.is_open()){
+        return false;
+    }
 
     stream.write(buffer.data(), buffer.size());
-}
 
-void File::WriteEntire(const std::string& filepath, std::string_view buffer) {
-    File::WriteEntire(std::filesystem::path(filepath), buffer);
-}
+    if(!stream)
+        return false;
+    
+    if(permissions){
+        std::error_code ec;
+        std::filesystem::permissions(filepath, *permissions, std::filesystem::perm_options::replace, ec);
 
-void File::WriteEntire(std::string_view filepath, std::string_view buffer) {
-    File::WriteEntire(std::filesystem::path(filepath), buffer);
+        if(ec)
+            return false;
+    }
+
+    return true;
 }
 
 std::string File::MakeUniqueFilename(const std::string& filename) {
