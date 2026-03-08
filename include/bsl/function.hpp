@@ -283,19 +283,19 @@ public:
 
 	template<typename ObjectType>
 	Function& Bind(ObjectType *object, ReturnType (ObjectType::*method)(ArgsType...)) {
-		m_Callable = DynamicFunctionType::Make<CallableRawMemberFunction<ObjectType, ReturnType, ArgsType...>>(object, method);
+		m_Callable = DynamicFunctionType::template Make<CallableRawMemberFunction<ObjectType, ReturnType, ArgsType...>>(object, method);
 		return *this;
 	}
 
 	template<typename ObjectType>
 	Function& Bind(std::weak_ptr<ObjectType> object, ReturnType (ObjectType::*method)(ArgsType...)) {
-		m_Callable = DynamicFunctionType::Make<CallableWeakMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method);
+		m_Callable = DynamicFunctionType::template Make<CallableWeakMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method);
 		return *this;
 	}
 
 	template<typename ObjectType>
 	Function& Bind(std::shared_ptr<ObjectType> object, ReturnType (ObjectType::*method)(ArgsType...)) {
-		m_Callable = DynamicFunctionType::Make<CallableSharedMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method);
+		m_Callable = DynamicFunctionType::template Make<CallableSharedMemberFunction<ObjectType, ReturnType, ArgsType...>>(std::move(object), method);
 		return *this;
 	}
 
