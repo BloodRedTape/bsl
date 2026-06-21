@@ -1,9 +1,11 @@
 project(bsl)
 
-add_library(bsl 
+add_library(bsl
 	"./sources/file.cpp"
 	"./sources/stdlib.cpp"
 	"./sources/stacktrace.cpp"
+	"./sources/async/worker.cpp"
+	"./sources/async/scheduler.cpp"
 )
 
 if(BSL_WITH_STACKTRACE)
@@ -44,5 +46,7 @@ target_precompile_headers(bsl PUBLIC
 	"./include/bsl/serialization.hpp"
 	"./include/bsl/serialization_std.hpp"
 	"./include/bsl/stdlib.hpp"
+	"./include/bsl/async/worker.hpp"
+	"./include/bsl/async/scheduler.hpp"
 )
 
