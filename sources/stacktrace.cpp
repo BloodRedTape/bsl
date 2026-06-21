@@ -28,69 +28,94 @@ void Stacktrace::Capture(void* (&frames)[MaxFramesCount], size_t& captured_frame
 #endif
 }
 
-std::ostream& operator<<(std::ostream& stream, const Stacktrace& trace){
+std::vector<StackFrame> Stacktrace::GetFrames() const {
+    std::vector<StackFrame> result;
+
 #ifdef _WIN32
     HANDLE process = GetCurrentProcess();
-
     SymInitialize(process, NULL, TRUE);
 
-    SYMBOL_INFO *symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+    SYMBOL_INFO* symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+    if (!symbol) return result;
 
-    if(!symbol){
-        stream << "<Stacktrace memory alloc routine failed>";
-        return stream;
-    }
-
-    symbol->MaxNameLen = 255;
+    symbol->MaxNameLen   = 255;
     symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
-    for(size_t i = 1 + trace.m_SkipFrames; i < trace.m_CapturedFrames; i++) {
-        static_assert(sizeof(trace.m_FramePointers[0]) == sizeof(DWORD64), "Winapi type size mismatch");
+    for (size_t i = 1 + m_SkipFrames; i < m_CapturedFrames; i++) {
+        StackFrame frame;
+        frame.Address = m_FramePointers[i];
 
-        SymFromAddr(process, (DWORD64)(trace.m_FramePointers[i]), 0, symbol);
+        if (SymFromAddr(process, (DWORD64)m_FramePointers[i], 0, symbol)) {
+            frame.SymbolAddr = (void*)symbol->Address;
+            frame.Function   = symbol->Name;
+            frame.Offset     = (std::uint8_t*)m_FramePointers[i] - (std::uint8_t*)symbol->Address;
 
-        char buffer[1024] = {0};
-        size_t offset = (std::uint8_t*)trace.m_FramePointers[i] - (std::uint8_t*)symbol->Address;
-        snprintf(buffer, sizeof(buffer),"%-3zi [0x%0llX] %s + %zi", i - trace.m_SkipFrames, symbol->Address, symbol->Name, offset);
+            HMODULE hmod = nullptr;
+            if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                  (LPCTSTR)m_FramePointers[i], &hmod)) {
+                char mod_path[MAX_PATH] = {0};
+                if (GetModuleFileNameA(hmod, mod_path, MAX_PATH))
+                    frame.Module = mod_path;
+            }
+        }
 
-        stream << buffer << '\n';
+        result.push_back(frame);
     }
     free(symbol);
 #elif defined(__unix__)
-    char **symbols = backtrace_symbols(trace.m_FramePointers, trace.m_CapturedFrames);
-    if (!symbols) {
-        stream << "<Stacktrace symbols routine failed>";
-        return stream;
-    }
-    char buf[2048] = {0};
-    for(int i = 1; i < trace.m_CapturedFrames; i++) {
+    char** symbols = backtrace_symbols(m_FramePointers, m_CapturedFrames);
+
+    for (size_t i = 1 + m_SkipFrames; i < m_CapturedFrames; i++) {
+        StackFrame frame;
+        frame.Address = m_FramePointers[i];
 
         Dl_info info;
-        if(dladdr(trace.m_FramePointers[i], &info) && info.dli_sname){
-            char *demangled = NULL;
-
+        if (dladdr(m_FramePointers[i], &info) && info.dli_sname) {
+            char* demangled = nullptr;
             int status = -1;
             if (info.dli_sname[0] == '_')
-                demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+                demangled = abi::__cxa_demangle(info.dli_sname, nullptr, 0, &status);
 
-            const char *proc_name = (status == 0 ? demangled : (info.dli_sname == 0 ? symbols[i] : info.dli_sname));
-            std::size_t offset = (std::uint8_t *)trace.m_FramePointers[i] - (std::uint8_t *)info.dli_saddr;
-            const char *filename = info.dli_fname;
-            void *frame_address = trace.m_FramePointers[i];
-
-            snprintf(buf, sizeof(buf), "%-3d 0x%016lx %s :: %s + %zd", i, (std::size_t)frame_address, filename, proc_name, offset);
-
+            frame.Function   = (status == 0 && demangled) ? demangled : (info.dli_sname ? info.dli_sname : (symbols ? symbols[i] : ""));
+            frame.SymbolAddr = info.dli_saddr;
+            frame.Offset     = (std::uint8_t*)m_FramePointers[i] - (std::uint8_t*)info.dli_saddr;
+            frame.Module     = info.dli_fname ? info.dli_fname : "";
             free(demangled);
-        }else{
-            snprintf(buf, sizeof(buf), "%-3d 0x%016lx %s", i, (std::size_t)trace.m_FramePointers[i], symbols[i]);
+        } else if (symbols) {
+            frame.Function = symbols[i];
         }
 
+        result.push_back(frame);
+    }
+    if (symbols) free(symbols);
+#endif
+
+    return result;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Stacktrace& trace){
+    auto frames = trace.GetFrames();
+
+    if (frames.empty()) {
+        stream << "<Stacktrace is not supported>\n";
+        return stream;
+    }
+
+    char buf[1024];
+    for (size_t i = 0; i < frames.size(); i++) {
+        const auto& f = frames[i];
+        if (!f.Function.empty())
+            snprintf(buf, sizeof(buf), "%-3zu 0x%016zx %s :: %s + %zu",
+                i, (size_t)f.Address,
+                f.Module.empty() ? "?" : f.Module.c_str(),
+                f.Function.c_str(), f.Offset);
+        else
+            snprintf(buf, sizeof(buf), "%-3zu 0x%016zx %s",
+                i, (size_t)f.Address,
+                f.Module.empty() ? "<unknown>" : f.Module.c_str());
         stream << buf << '\n';
     }
-    free(symbols);
-#else
-    stream << "<Stacktrace is not supported>\n";
-#endif
+
 	return stream;
 }
 

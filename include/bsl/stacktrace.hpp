@@ -2,6 +2,16 @@
 
 #include <cstdint>
 #include <ostream>
+#include <vector>
+#include <string>
+
+struct StackFrame {
+    void*       Address     = nullptr;
+    void*       SymbolAddr  = nullptr;
+    std::string Function;
+    std::string Module;
+    std::size_t Offset      = 0;
+};
 
 class Stacktrace{
     static constexpr size_t MaxFramesCount = 256;
@@ -15,6 +25,8 @@ public:
     {
         Capture(m_FramePointers, m_CapturedFrames);
     }
+
+    std::vector<StackFrame> GetFrames() const;
 
     friend std::ostream &operator<<(std::ostream &stream, const Stacktrace &trace);
 private:
